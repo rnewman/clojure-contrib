@@ -11,6 +11,7 @@
 ;; remove this notice, or any other, from this software.
 
 ;; READ THESE CAVEATS:
+;; Requires post-Clojure 1.0 git edge for clojure.test, clojure.backtrace.
 ;; This is prerelease.
 ;; This API will change.
 ;; A few features currently require Java 6 or later.
