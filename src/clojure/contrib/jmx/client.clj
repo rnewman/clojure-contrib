@@ -81,6 +81,6 @@
 (defn op-param-types 
   "The parameter types (as class name strings) for operation op on n. Used for invoke."
   [n op]
-  (map #(-> % .getOpenType .getClassName) (.getSignature (operation n op))))
+  (map #(-> % .getType) (.getSignature (operation n op))))
 
 

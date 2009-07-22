@@ -76,11 +76,10 @@
 
 (deftest test-invoke-operations
   (testing "without arguments"
-           (jmx/invoke "java.lang:type=Memory" :gc)))
-;; TODO: broken on some versions of Java.
-;;   (testing "with arguments"
-;;            (.addLogger (LogManager/getLogManager) (Logger/getLogger "clojure.contrib.test_contrib.test_jmx"))
-;;            (jmx/invoke "java.util.logging:type=Logging" :setLoggerLevel "clojure.contrib.test_contrib.test_jmx" "WARNING")))
+           (jmx/invoke "java.lang:type=Memory" :gc))
+  (testing "with arguments"
+           (.addLogger (LogManager/getLogManager) (Logger/getLogger "clojure.contrib.test_contrib.test_jmx"))
+           (jmx/invoke "java.util.logging:type=Logging" :setLoggerLevel "clojure.contrib.test_contrib.test_jmx" "WARNING")))
 
 (deftest test-jmx->clj
   (testing "it works recursively on maps"
