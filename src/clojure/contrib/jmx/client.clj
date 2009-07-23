@@ -14,8 +14,6 @@
 
 (in-ns 'clojure.contrib.jmx)
 
-(println JMXConnectorFactory)
-
 ; TODO: needs an integration test
 ; TODO: why full package needed for JMXConnectorFactory?
 (defmacro with-connection

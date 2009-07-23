@@ -102,14 +102,13 @@
          :java.class.path
          :path.separator)))
 
-;; TODO: currently broken on some versions of Java.
-;; (deftest dynamic-mbean
-;;   (let [mbean-name "clojure.contrib.test_contrib.test_jmx:name=Foo"]
-;;     (jmx/register-mbean
-;;      (jmx/dynamic-mbean
-;;       (ref {:string-attribute "a-string"}))
-;;      mbean-name)
-;;     (is (= "a-string" (jmx/read mbean-name :string-attribute)))))
+(deftest dynamic-mbean
+  (let [mbean-name "clojure.contrib.test_contrib.test_jmx:name=Foo"]
+    (jmx/register-mbean
+     (jmx/dynamic-mbean
+      (ref {:string-attribute "a-string"}))
+     mbean-name)
+    (is (= "a-string" (jmx/read mbean-name :string-attribute)))))
 
 (deftest various-beans-are-readable
   (testing "that all java.lang beans can be read without error"
