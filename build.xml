@@ -17,6 +17,12 @@
 
   <!-- These make sense for building on tapestry.formos.com -->
 
+  <target name="which">
+    <java classname="fail">
+      <arg value = "-version"/>
+    </java>
+  </target>
+
   <property name="snapshot.repo.dir" location="/var/www/maven-snapshot-repository"/>
   <property name="stable.repo.dir" location="/var/www/maven-repository"/>
 
@@ -34,7 +40,7 @@
   <target name="test_contrib"
           description="Run contrib tests"
           if="hasclojure">
-    <java classname="clojure.main">
+    <java classname="clojure.main" fork="true">
       <classpath>
         <path location="${build}"/>
         <path location="${src}"/>
@@ -42,6 +48,7 @@
       </classpath>
       <arg value="-e"/>
       <arg value="(require '(clojure.contrib [test-contrib :as main])) (main/run)"/>
+      <jvmarg value="-Djava.security.policy=config/jmx.policy"/>
     </java>
   </target>
 
@@ -85,6 +92,7 @@
       <arg value="clojure.contrib.pprint.PrettyWriter"/>
       <arg value="clojure.contrib.fnmap.PersistentFnMap"/>
       <arg value="clojure.contrib.condition.Condition"/>
+      <arg value="clojure.contrib.jmx.Bean"/>
     </java>
   </target>
 

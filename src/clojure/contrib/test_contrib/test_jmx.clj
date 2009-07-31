@@ -12,7 +12,8 @@
 
 (ns clojure.contrib.test-contrib.test-jmx
   (:import javax.management.openmbean.CompositeDataSupport
-           [java.util.logging LogManager Logger])
+           [java.util.logging LogManager Logger]
+           clojure.contrib.jmx.Bean)
   (:use clojure.test)
   (:require [clojure.contrib [jmx :as jmx]]))
 
@@ -63,7 +64,7 @@
 ;;              (are [subkeys attr] (= (set subkeys) (set (keys attr)))
 ;;                   [:committed] (jmx/read mem :HeapMemoryUsage)))))
 
-(deftest create-mbean
+(deftest mbean-from-oname
   (are [oname key-names]
        (= (set key-names) (set (keys (jmx/mbean oname))))
        "java.lang:type=Memory" [:Verbose :ObjectPendingFinalizationCount :HeapMemoryUsage :NonHeapMemoryUsage]))
@@ -102,13 +103,27 @@
          :java.class.path
          :path.separator)))
 
-(deftest dynamic-mbean
+;; (deftest dynamic-mbean-from-proxy
+;;   (let [mbean-name "clojure.contrib.test_contrib.test_jmx:name=Foo"]
+;;     (jmx/register-mbean
+;;      (jmx/dynamic-mbean
+;;       (ref {:string-attribute "a-string"}))
+;;      mbean-name)
+;;     (is (= "a-string" (jmx/read mbean-name :string-attribute)))))
+
+(deftest dynamic-mbean-from-compiled-class
   (let [mbean-name "clojure.contrib.test_contrib.test_jmx:name=Foo"]
     (jmx/register-mbean
-     (jmx/dynamic-mbean
+     (Bean.
       (ref {:string-attribute "a-string"}))
      mbean-name)
     (is (= "a-string" (jmx/read mbean-name :string-attribute)))))
+
+(deftest test-bean
+  (let [state (ref {:a 1})
+        bean (Bean. state)]
+    (testing "accessing values"
+             (is (= 1 (.getAttribute bean "a"))))))
 
 (deftest various-beans-are-readable
   (testing "that all java.lang beans can be read without error"
