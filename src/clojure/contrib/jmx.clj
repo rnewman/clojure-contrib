@@ -70,7 +70,7 @@
         [clojure.walk :only [postwalk]])
   (:import [clojure.lang Associative]
            java.lang.management.ManagementFactory
-           [javax.management Attribute DynamicMBean MBeanInfo ObjectName RuntimeMBeanException]
+           [javax.management Attribute DynamicMBean MBeanInfo ObjectName RuntimeMBeanException MBeanAttributeInfo]
            [javax.management.remote JMXConnectorFactory JMXServiceURL]))
 
 (defvar *connection* (ManagementFactory/getPlatformMBeanServer)

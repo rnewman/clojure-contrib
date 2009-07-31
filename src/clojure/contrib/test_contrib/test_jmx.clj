@@ -12,6 +12,7 @@
 
 (ns clojure.contrib.test-contrib.test-jmx
   (:import javax.management.openmbean.CompositeDataSupport
+           [javax.management MBeanAttributeInfo AttributeList]
            [java.util.logging LogManager Logger]
            clojure.contrib.jmx.Bean)
   (:use clojure.test)
@@ -103,27 +104,15 @@
          :java.class.path
          :path.separator)))
 
-;; (deftest dynamic-mbean-from-proxy
-;;   (let [mbean-name "clojure.contrib.test_contrib.test_jmx:name=Foo"]
-;;     (jmx/register-mbean
-;;      (jmx/dynamic-mbean
-;;       (ref {:string-attribute "a-string"}))
-;;      mbean-name)
-;;     (is (= "a-string" (jmx/read mbean-name :string-attribute)))))
-
-(deftest dynamic-mbean-from-compiled-class
-  (let [mbean-name "clojure.contrib.test_contrib.test_jmx:name=Foo"]
-    (jmx/register-mbean
-     (Bean.
-      (ref {:string-attribute "a-string"}))
-     mbean-name)
-    (is (= "a-string" (jmx/read mbean-name :string-attribute)))))
-
-(deftest test-bean
-  (let [state (ref {:a 1})
-        bean (Bean. state)]
-    (testing "accessing values"
-             (is (= 1 (.getAttribute bean "a"))))))
+(deftest test-creating-attribute-infos
+  (let [infos (jmx/map->attribute-infos [[:a 1] [:b 2]])
+        info (first infos)]
+    (testing "generates the right class"
+             (is (= (class (into-array MBeanAttributeInfo [])) (class infos))))
+    (testing "generates the right instance data"
+             (are [result expr] (= result expr)
+                  "a" (.getName info)
+                  "a" (.getDescription info)))))
 
 (deftest various-beans-are-readable
   (testing "that all java.lang beans can be read without error"
@@ -135,3 +124,39 @@
            (is (= "service:jmx:rmi:///jndi/rmi://localhost:3000/jmxrmi" (jmx/jmx-url))))
   (testing "creates custom url"
            (is (= "service:jmx:rmi:///jndi/rmi://example.com:4000/jmxrmi" (jmx/jmx-url {:host "example.com" :port 4000})))))
+
+;; ----------------------------------------------------------------------
+;; tests for clojure.contrib.jmx.Bean.
+
+(deftest dynamic-mbean-from-compiled-class
+  (let [mbean-name "clojure.contrib.test_contrib.test_jmx:name=Foo"]
+    (jmx/register-mbean
+     (Bean.
+      (ref {:string-attribute "a-string"}))
+     mbean-name)
+    (are [result expr] (= result expr)
+         "a-string" (jmx/read mbean-name :string-attribute)
+         {:string-attribute "a-string"} (jmx/mbean mbean-name)
+         )))
+
+(deftest test-getAttribute
+  (let [state (ref {:a 1 :b 2})
+        bean (Bean. state)]
+    (testing "accessing values"
+             (are [result expr] (= result expr)
+                  1 (.getAttribute bean "a")))))
+
+(deftest test-bean-info
+  (let [state (ref {:a 1 :b 2})
+        bean (Bean. state)
+        info (.getMBeanInfo bean)]
+    (testing "accessing info"
+             (are [result expr] (= result expr)
+                  "clojure.contrib.jmx.Bean" (.getClassName info)))))
+
+(deftest test-getAttributes
+  (let [bean (Bean. (ref {:r 5 :d 4}))
+        atts (.getAttributes bean (into-array ["r" "d"]))]
+    (are [x y] (= x y)
+         AttributeList (class atts)
+         [5 4] (seq atts))))

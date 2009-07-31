@@ -73,3 +73,14 @@
 (defmethod jmx->clj :map [m]  (into {} (zipmap (keys m) (map jmx->clj (vals m)))))
 (defmethod jmx->clj :default [obj] obj)
 
+(defn build-attribute-info
+  "Construct an MBeanAttributeInfo. Normally called with a key/value pair from a Clojure map."
+  ([attr-name attr-value]
+     (build-attribute-info (as-str attr-name) "java.lang.Object" (as-str attr-name) true false false))
+  ([name type desc readable? writable? is?] (MBeanAttributeInfo. name type desc readable? writable? is? )))
+
+(defn map->attribute-infos
+  "Construct an MBeanAttributeInfo[] from a Clojure associative."
+  [attr-map]
+  (into-array (map (fn [[attr-name value]] (build-attribute-info attr-name value))
+                   attr-map)))

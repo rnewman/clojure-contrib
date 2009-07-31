@@ -16,13 +16,3 @@
 (defn register-mbean [mbean mbean-name]
   (.registerMBean *connection* mbean (as-object-name mbean-name)))
 
-; TODO: rest of the arguments
-(defn generate-mbean-info [_]
-  (proxy [MBeanInfo] ["GeneratedClass" "Clojure Dynamic MBean" nil nil nil nil]
-    ))
-
-; TODO: rest of the methods
-(defn dynamic-mbean [aref]
-  (proxy [DynamicMBean] []
-    (getMBeanInfo [] (generate-mbean-info {}))
-    (getAttribute [attr] (@aref (keyword attr)))))
