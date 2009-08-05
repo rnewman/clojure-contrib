@@ -17,7 +17,10 @@
   (:gen-class))
 
 (def test-names
-     [:test-jmx])
+     [:complex-numbers :fnmap :macro-utils :monads :pprint.pretty
+      :pprint.cl-format :str-utils :shell-out :test-graph
+      :test-dataflow :test-java-utils :test-lazy-seqs
+      :test-trace :test-jmx])
 
 (def test-namespaces
      (map #(symbol (str "clojure.contrib.test-contrib." (name %)))

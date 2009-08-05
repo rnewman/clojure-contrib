@@ -48,6 +48,13 @@
    :read-timeout 0
    :follow-redirects true})
 
+(defn- completed-watch [success-fn failure-fn key http-agnt old-state new-state]
+  (when (and (= (::state new-state) ::completed)
+             (not= (::state old-state) ::completed))
+   (if (success? (::connection new-state))
+     (when success-fn (success-fn http-agnt))
+     (when failure-fn (failure-fn http-agnt)))))
+
 (defn http-agent
   "Creates (and immediately returns) an Agent representing an HTTP
   request running in a new thread.
@@ -82,18 +89,47 @@
 
   If true, HTTP 3xx redirects will be followed automatically.  Default
   is true.
+
+  :on-success f
+
+  Function to be called when the request succeeds with a 2xx response
+  code.  Default is nil, do nothing.  The function will be called with
+  the HTTP agent as its argument.  Any exceptions thrown by this
+  function will be added to the agent's error queue (see
+  agent-errors).
+
+  :on-failure f
+
+  Function to be called when the request fails with a 4xx or 5xx
+  response code.  Default is nil, do nothing.  The function will be
+  called with the HTTP agent as its argument.  Any exceptions thrown
+  by this function will become agent-errors.  Any exceptions thrown by
+  this function will be added to the agent's error queue (see
+  agent-errors).
   "
   ([url & options]
      (let [opts (merge *http-request-defaults* (apply array-map options))]
        (let [a (agent {::connection (c/http-connection url)
-                       ::state ::created})]
+                       ::state ::created
+                       ::url url
+                       ::options opts})]
+         (when (or (:on-success opts) (:on-failure opts))
+           (add-watch a ::completed-watch
+                      (partial completed-watch
+                               (:on-success opts) (:on-failure opts))))
          (send-off a do-http-agent-request opts)))))
 
-(defn response-body-bytes [a]
+(defn response-body-bytes
+  "Returns a Java byte array of the content returned by the server."
+  [a]
   (when (= (::state @a) ::completed)
     (::response-body-bytes @a)))
 
-(defn response-body-str [a]
+(defn response-body-str
+  "Returns the HTTP response body as a string.  The string will be
+  created using the encoding specified by the server, or
+  *default-encoding* if it is not specified."
+  [a]
   (let [da @a]
     (when (= (::state da) ::completed)
       (let [conn (::connection da)
@@ -102,14 +138,26 @@
                          duck/*default-encoding*)]
         (String. bytes encoding)))))
 
-(defn response-status [a]
-  (.getResponseCode (::connection @a)))
+(defn response-status
+  "Returns the Integer response status code (e.g. 200, 404) for this request."
+  [a]
+  (when (= (::state @a) ::completed)
+    (.getResponseCode (::connection @a))))
 
-(defn response-message [a]
-  (.getResponseMessage (::connection @a)))
+(defn response-message
+  "Returns the HTTP response message (e.g. 'Not Found'), for this request."
+  [a]
+  (when (= (::state @a) ::completed)
+    (.getResponseMessage (::connection @a))))
 
-(defn response-headers [a]
-  (.getHeaderFields (::connection @a)))
+(defn response-headers
+  "Returns a String=>String map of HTTP response headers.  Header
+  names are converted to all lower-case.  If a header appears more
+  than once, only the last value is returned."
+  [a]
+  (reduce (fn [m [#^String k v]]
+            (assoc m (when k (.toLowerCase k)) (last v)))
+          {} (.getHeaderFields (::connection @a))))
 
 (defn response-headers-seq
   "Returns the HTTP response headers in order as a sequence of
