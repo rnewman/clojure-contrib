@@ -12,12 +12,12 @@
 
 ; TODO: rest of the arguments, as needed
 (defn generate-mbean-info [clj-bean]
-  (proxy [MBeanInfo] [(.. clj-bean getClass getName)                     ; class name
-                      "Clojure Dynamic MBean"                            ; description
-                      (jmx/map->attribute-infos @(.state clj-bean))      ; attributes
-                      nil                                                ; constructors
-                      nil                                                ; operations
-                      nil]))                                             ; notifications                                          
+  (MBeanInfo. (.. clj-bean getClass getName)                      ; class name
+              "Clojure Dynamic MBean"                             ; description
+              (jmx/map->attribute-infos @(.state clj-bean))       ; attributes
+              nil                                                 ; constructors
+              nil                                                 ; operations
+              nil))                                               ; notifications                                          
 
 (defn -getMBeanInfo
   [this]

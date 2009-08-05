@@ -160,3 +160,4 @@
     (are [x y] (= x y)
          AttributeList (class atts)
          [5 4] (seq atts))))
+
