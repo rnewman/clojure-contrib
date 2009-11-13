@@ -175,6 +175,23 @@
       (doto (as-properties m)
         (.store f #^String comments)))))
 
+(defn delete-file
+  "Delete file f. Raise an exception if it fails unless silently is true."
+  [f & [silently]]
+  (or (.delete (file f))
+      silently
+      (throw (java.io.IOException. (str "Couldn't delete " f)))))
+
+(defn delete-file-recursively
+  "Delete file f. If it's a directory, recursively delete all its contents.
+Raise an exception if any deletion fails unless silently is true."
+  [f & [silently]]
+  (let [f (file f)]
+    (if (.isDirectory f)
+      (doseq [child (.listFiles f)]
+        (delete-file-recursively child silently)))
+    (delete-file f silently)))
+
 (defmulti
   #^{:doc "Coerces argument (URL, URI, or String) to a java.net.URL."
      :arglists '([arg])}
@@ -187,3 +204,20 @@
 (defmethod as-url String [#^String x] (URL. x))
 
 (defmethod as-url File [#^File x] (.toURL x))
+
+(defn wall-hack-method
+  "Calls a private or protected method.
+   params is a vector of class which correspond to the arguments to the method
+   obj is nil for static methods, the instance object otherwise
+   the method name is given as a symbol or a keyword (something Named)"
+  [class-name method-name params obj & args]
+  (-> class-name (.getDeclaredMethod (name method-name) (into-array Class params))
+    (doto (.setAccessible true))
+    (.invoke obj (into-array Object args))))
+
+(defn wall-hack-field
+  "Access to private or protected field."
+  [class-name field-name obj]
+  (-> class-name (.getDeclaredField (name field-name))
+    (doto (.setAccessible true))
+    (.get obj)))
